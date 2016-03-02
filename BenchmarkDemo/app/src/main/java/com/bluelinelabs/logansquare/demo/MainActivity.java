@@ -1,13 +1,16 @@
 package com.bluelinelabs.logansquare.demo;
 
 import android.app.AlertDialog;
+import android.databinding.DataBindingUtil;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
 
 import com.bluelinelabs.logansquare.LoganSquare;
+import com.bluelinelabs.logansquare.demo.databinding.ActivityMainBinding;
 import com.bluelinelabs.logansquare.demo.model.Response;
 import com.bluelinelabs.logansquare.demo.parsetasks.GsonParser;
 import com.bluelinelabs.logansquare.demo.parsetasks.JacksonDatabindParser;
@@ -37,8 +40,8 @@ import java.util.List;
 /**
  * This is a test app we wrote in 10 minutes. Please do not write code like this, kiddos.
  */
-public class MainActivity extends ActionBarActivity {
-
+public class MainActivity extends AppCompatActivity {
+    private ActivityMainBinding binding;
     private static final int ITERATIONS = 20;
 
     private BarChart mBarChart;
@@ -48,12 +51,18 @@ public class MainActivity extends ActionBarActivity {
     private final ParseListener mParseListener = new ParseListener() {
         @Override
         public void onComplete(Parser parser, ParseResult parseResult) {
+            binding.setCompleted(binding.getCompleted()+1);
+            binding.executePendingBindings();
+
             addBarData(parser, parseResult);
         }
     };
     private final SerializeListener mSerializeListener = new SerializeListener() {
         @Override
         public void onComplete(Serializer serializer, SerializeResult serializeResult) {
+            binding.setCompleted(binding.getCompleted()+1);
+            binding.executePendingBindings();
+
             addBarData(serializer, serializeResult);
         }
     };
@@ -61,7 +70,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         mJsonStringsToParse = readJsonFromFile();
         mResponsesToSerialize = getResponsesToParse();
@@ -69,19 +78,29 @@ public class MainActivity extends ActionBarActivity {
         mBarChart = (BarChart)findViewById(R.id.bar_chart);
         mBarChart.setColumnTitles(new String[] {"GSON", "Jackson", "LoganSquare", "Moshi"});
 
-        findViewById(R.id.btn_parse_tests).setOnClickListener(new OnClickListener() {
+        resetCompleted();
+
+        binding.btnParseTests.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                resetCompleted();
                 performParseTests();
             }
         });
 
-        findViewById(R.id.btn_serialize_tests).setOnClickListener(new OnClickListener() {
+        binding.btnSerializeTests.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                resetCompleted();
                 performSerializeTests();
             }
         });
+    }
+
+    private void resetCompleted()
+    {
+        binding.setCompleted(0);
+        binding.executePendingBindings();
     }
 
     private void performParseTests() {
